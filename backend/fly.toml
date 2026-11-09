@@ -1,0 +1,38 @@
+# fly.toml app configuration file generated for sandboxed on 2026-06-17T19:11:05Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'sandboxed'
+primary_region = 'sjc'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '8787'
+  CLAMD_HOST = '127.0.0.1'
+  CLAMD_PORT = '3310'
+  CLAM_INIT_TIMEOUT_MS = '5000'
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'get'
+    path = '/health'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  # ClamAV's clamd loads the full signature DB into memory (~1.2–1.5 GB). On a
+  # 1 GB VM it gets OOM-killed, the clamd TCP socket dies, and /scan-file fails
+  # with "Could not scan file via TCP or locally". 2 GB gives clamd headroom.
+  memory = '2gb'
